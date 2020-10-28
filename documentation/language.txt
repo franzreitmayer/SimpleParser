@@ -1,0 +1,83 @@
+start		--> (expr | assign )*
+assign		--> id '=' expr ';'
+expr		--> fact ( ('+'|'-') fact)*
+fact		--> atom ( ('*'|'/') atom)*
+atom		--> INT | '(' expr ')'
+
+
+3+5*5
+
+
+derive simple grammar
+start		--> expr 
+				| assign 
+				| start 
+				| €
+assign		--> id '=' expr ';'
+expr		--> fact expr'
+expr'		--> '+' fact expr' 
+				| '-' fact expr'
+				| €
+fact		--> atom fact'
+fact'		--> '*' atom fact' 
+				| '/' atom fact'
+				| €
+atom		--> INT | '(' expr ')'
+
+
+
+
+derive director set
+How to find FOLLOW(A):
+1. Add $ to start rule
+2. for each A->:alpha:B:beta: add FIRST(:beta:)\€ to FOLLOW(B)
+3. for each A->:alpha:B and A->:alpha:B:beta: where €E FIRST(:beta:) add
+	FOLLOW(A) to FOLLOW(B)
+
+FOLLOW(A)														FIRST(a)
+------------------------------------------------------------------------------
+				start		-->				expr				INT, '('
+											| assign			ID
+											| start				
+											| €
+$,')'			expr		-->				fact expr'			INT, '('			
+$,')'			expr'		-->				'+' fact expr'		'+'
+											| '-' fact expr'	'-'
+											| €					'€'
+$,'+',')','-'	fact		-->				atom fact'			INT, '('
+$,'+',')','-'	fact'		-->				'*' atom fact'		'*'
+											| '/' atom fact'	'/'
+											| €					€
+'*','+',$,')','-'atom		-->				INT |				INT
+											'(' expr ')'		'('			
+				
+				
+				
+				
+				
+				
+				
+Derive Scanner:
+0 --'\n\t ' --> 1 			return getNext()
+2 --'('-------> 3			return OPEN;
+4 --')'-------> 5			return CLOSE;
+6 --'+'-------> 7			return PLUS;
+8 --'*'-------> 9			return TIMES;
+			  /-0..9
+			 |   |
+			 V	 |
+10 --1..9-->11--/
+			 |
+			 |----other-->12 return* INT (stepback required)
+13 -->EOF--- return EOF
+14 -->'-'--- return MINUS
+15 -->'/'--- return DIVIDE
+16 -->';'--- return SEMI
+17 -->'='--- return ASSIGN
+
+              /LETTER
+			  |	  |
+              V   |
+18 --LETTER--19---/
+              |
+              |--------other-->20 return* ID (stepback required)	
